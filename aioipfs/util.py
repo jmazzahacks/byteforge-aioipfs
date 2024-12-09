@@ -67,7 +67,7 @@ class DotJSON(dict):
         if self._is_indexable(obj):
             try:
                 return obj[int(attrd)]
-            except:
+            except Exception:
                 return None
         elif isinstance(obj, dict):
             return obj.get(attrd, None)

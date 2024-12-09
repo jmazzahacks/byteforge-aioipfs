@@ -51,8 +51,8 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "ruff",
     "tox",
-    "flake8",
     "wheel",
 ]
 docs = [
