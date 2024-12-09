@@ -18,7 +18,7 @@ from multiaddr.exceptions import ParseError  # type: ignore
 from multiaddr.exceptions import StringParseError  # type: ignore
 
 from aioipfs import api
-from aioipfs.exceptions import *  # noqa
+from aioipfs.exceptions import InvalidNodeAddressError
 from aioipfs.apis import dag as dag_api
 from aioipfs.apis import pin as pin_api
 from aioipfs.apis import multibase as multibase_api

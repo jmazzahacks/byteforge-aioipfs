@@ -14,7 +14,7 @@ from aiohttp import payload
 from .apis import HTTP_ERROR_CODES
 from .apis import SubAPI
 from . import multi
-from .helpers import *  # noqa
+from .helpers import ARG_PARAM, boolarg, quote_args, quote_dict
 
 
 class BitswapAPI(SubAPI):
