@@ -7,7 +7,7 @@ from aioipfs.api import SubAPI
 from aioipfs.api import boolarg
 from aioipfs.api import ARG_PARAM
 from aioipfs import multi
-from aioipfs import UnknownAPIError
+from aioipfs.exceptions import UnknownAPIError
 from aioipfs import util
 
 
@@ -39,7 +39,7 @@ class DagAPI(SubAPI):
 
         basename = os.path.basename(filename)
         with multi.FormDataWriter() as mpwriter:
-            dag_payload = payload.BytesIOPayload(open(filename, 'rb'))
+            dag_payload = payload.BufferedReaderPayload(open(filename, 'rb'))
             dag_payload.set_content_disposition('form-data',
                                                 filename=basename)
             mpwriter.append_payload(dag_payload)

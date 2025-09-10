@@ -242,7 +242,7 @@ class TestAsyncIPFS:
 
             # This fails, as --to-files requires a MFS path starting with /
             await iclient.add_str('invalid', to_files='noslash')
-            with pytest.raises(aioipfs.APIError):
+            with pytest.raises(APIError):
                 await iclient.files.read('/noslash')
 
             # Valid MFS path
