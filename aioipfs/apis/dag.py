@@ -161,7 +161,7 @@ class DagAPI(SubAPI):
                     raise Exception('CAR file does not exist')
 
                 basename = os.path.basename(car)
-                car_payload = payload.BytesIOPayload(
+                car_payload = payload.BufferedReaderPayload(
                     open(car, 'rb'),
                     content_type='application/octet-stream'
                 )
