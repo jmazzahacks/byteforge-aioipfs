@@ -285,17 +285,26 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     async def test_hidden(self, ipfsdaemon, iclient,
                           dir_hierarchy1):
+        print("DEBUG: Starting test_hidden")
+        print(f"DEBUG: dir_hierarchy1 = {dir_hierarchy1}")
+        print("DEBUG: About to call iclient.add() with hidden=False")
+        
         async for added in iclient.add(dir_hierarchy1, hidden=False):
+            print(f"DEBUG: Processing added file: {added}")
             parts = added['Name'].split('/')
             for part in parts:
                 assert not part.startswith('.')
 
+        print("DEBUG: First add completed, starting second add with hidden=True")
         names = []
         async for added in iclient.add(dir_hierarchy1, hidden=True):
+            print(f"DEBUG: Processing added file (hidden=True): {added}")
             names.append(added['Name'])
 
+        print(f"DEBUG: All files added, names = {names}")
         assert 'test_hidden0/d/.e/f/.file3' in names
         assert 'test_hidden0/a/b/.c' in names
+        print("DEBUG: test_hidden completed successfully")
 
     @pytest.mark.asyncio
     async def test_ignorerules(self, ipfsdaemon, iclient,
@@ -673,7 +682,7 @@ class TestAsyncIPFS:
         assert 'DataSent' in stats
 
     @pytest.mark.asyncio
-    async def test_filestore(self, event_loop, ipfsdaemon, iclient):
+    async def test_filestore(self, ipfsdaemon, iclient):
         await iclient.filestore.dups()
 
     @pytest.mark.asyncio
