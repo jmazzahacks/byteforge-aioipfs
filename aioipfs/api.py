@@ -283,7 +283,7 @@ class ConfigAPI(SubAPI):
 
         with open(configpath, 'rb') as configfd:
             with multi.FormDataWriter() as mpwriter:
-                cpay = payload.BytesIOPayload(configfd, filename='config')
+                cpay = payload.BufferedReaderPayload(configfd, filename='config')
                 cpay.set_content_disposition('form-data', filename='config')
                 mpwriter.append_payload(cpay)
 
