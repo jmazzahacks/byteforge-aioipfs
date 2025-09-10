@@ -36,7 +36,7 @@ def multiform_json(json, name=''):
 
 def bytes_payload_from_file(filepath):
     basename = os.path.basename(filepath)
-    file_payload = payload.BytesIOPayload(
+    file_payload = payload.BufferedReaderPayload(
         open(filepath, 'rb'),
         content_type='application/octet-stream'
     )
@@ -135,6 +135,8 @@ class DirectoryListing:
     def genNames(self):
         """ Returns the file paths inside self.directory
             with associated opened file descriptors """
+        print(f"DEBUG: genNames() called for directory: {self.directory}")
+        print(f"DEBUG: hidden={self.hidden}")
         names = []
 
         added_directories = set()
@@ -172,11 +174,21 @@ class DirectoryListing:
             # Scan for first super-directory that has already been added
             dir_base = short_path
             dir_parts = []
+            loop_count = 0
+            print(f"DEBUG: add_directory() called for short_path: {short_path}")
             while dir_base:
+                loop_count += 1
+                print(f"DEBUG: Loop {loop_count}, dir_base: '{dir_base}', added_directories: {added_directories}")
+                if loop_count > 20:  # Safety break to prevent infinite loops
+                    print(f"DEBUG: INFINITE LOOP DETECTED! Breaking after 20 iterations")
+                    break
+                    
                 dir_base, dir_name = os.path.split(dir_base)
+                print(f"DEBUG: After split: dir_base='{dir_base}', dir_name='{dir_name}'")
 
                 dir_parts.append(dir_name)
                 if dir_base in added_directories:
+                    print(f"DEBUG: Found dir_base in added_directories, breaking")
                     break
 
             # Add missing intermediate directory nodes in the right order

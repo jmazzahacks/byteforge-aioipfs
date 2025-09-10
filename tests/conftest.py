@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 
 import tempfile
 import random
@@ -131,8 +132,8 @@ gwport = 9080
 swarmport = 9002
 
 
-@pytest.fixture(scope='module')
-def ipfsdaemon():
+@pytest_asyncio.fixture(scope='module')
+async def ipfsdaemon():
     # Starts a daemon on high port and temporary directory, yield it
     # when started and shut it down on fixture's exit
 
@@ -180,8 +181,8 @@ gwport_a = 9090
 swarmport_a = 9012
 
 
-@pytest.fixture(scope='module')
-def ipfsdaemon_with_auth():
+@pytest_asyncio.fixture(scope='module')
+async def ipfsdaemon_with_auth():
     tmpdir = tempfile.mkdtemp()
 
     os.putenv('IPFS_PATH', tmpdir)
@@ -237,15 +238,15 @@ def ipfs_peerid(ipfsdaemon):
     return ipfs_getconfig_var('Identity.PeerID').strip()
 
 
-@pytest.fixture(autouse=True)
-async def iclient(event_loop):
-    client = aioipfs.AsyncIPFS(port=apiport, loop=event_loop)
+@pytest_asyncio.fixture(autouse=True)
+async def iclient():
+    client = aioipfs.AsyncIPFS(port=apiport)
     yield client
     await client.close()
 
 
-@pytest.fixture(autouse=True)
-async def iclient_with_auth(event_loop):
-    client = aioipfs.AsyncIPFS(port=apiport_a, loop=event_loop)
+@pytest_asyncio.fixture(autouse=True)
+async def iclient_with_auth():
+    client = aioipfs.AsyncIPFS(port=apiport_a)
     yield client
     await client.close()

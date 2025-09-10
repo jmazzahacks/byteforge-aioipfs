@@ -1,0 +1,9 @@
+mypy
+pytest
+pytest-asyncio
+pytest-cov
+ruff
+tox
+wheel
+black
+tux
