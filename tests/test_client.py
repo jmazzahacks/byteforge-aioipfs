@@ -18,7 +18,7 @@ import aioipfs
 
 from aioipfs import util
 from aioipfs.multi import DirectoryListing
-from aioipfs.exceptions import RPCAccessDenied
+from aioipfs.exceptions import RPCAccessDenied, APIError
 
 
 def random_word(length=8):
@@ -28,58 +28,57 @@ def random_word(length=8):
 
 class TestClientConstructor:
     @pytest.mark.asyncio
-    async def test_invalid_constructor(self, event_loop):
+    async def test_invalid_constructor(self):
         # Invalid host
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(host=None, loop=event_loop)
+            aioipfs.AsyncIPFS(host=None)
 
         # Invalid port
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(host='localhost', port=None, loop=event_loop)
+            aioipfs.AsyncIPFS(host='localhost', port=None)
 
         # Invalid multiaddr
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='invalid', loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='invalid')
 
         # Incomplete multiaddrs
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='/ip4/127.0.0.1', loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='/ip4/127.0.0.1')
 
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='/ip6/::1', loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='/ip6/::1')
 
         # 'localhost' is not a valid IPv4 for the ip4 codec
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='/ip4/localhost/tcp/8000', loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='/ip4/localhost/tcp/8000')
 
         # UDP protocol is of course not supported for the RPC
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='/ip4/127.0.0.1/udp/4000', loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='/ip4/127.0.0.1/udp/4000')
 
         # Invalid application layer protocol
         with pytest.raises(aioipfs.InvalidNodeAddressError):
-            aioipfs.AsyncIPFS(maddr='/ip4/localhost/tcp/4000/invalid',
-                              loop=event_loop)
+            aioipfs.AsyncIPFS(maddr='/ip4/localhost/tcp/4000/invalid')
 
     @pytest.mark.asyncio
-    async def test_constructor_apiurl(self, event_loop, ipfsdaemon):
+    async def test_constructor_apiurl(self, ipfsdaemon):
         ddir, apiport, sp = ipfsdaemon
 
         # Test by passing a host and port
         client = aioipfs.AsyncIPFS(
-            host='localhost', port=apiport, loop=event_loop)
+            host='localhost', port=apiport)
 
         assert str(client.api_url) == f'http://localhost:{apiport}/api/v0/'
 
         # Test by passing a host, port and scheme
         client = aioipfs.AsyncIPFS(
-            host='localhost', port=apiport, scheme='https', loop=event_loop)
+            host='localhost', port=apiport, scheme='https')
 
         assert str(client.api_url) == f'https://localhost:{apiport}/api/v0/'
 
         # Test by passing a valid /ip4/x.x.x.x/tcp/port multiaddr
         client = aioipfs.AsyncIPFS(
-            maddr=f'/ip4/127.0.0.1/tcp/{apiport}', loop=event_loop)
+            maddr=f'/ip4/127.0.0.1/tcp/{apiport}')
 
         assert str(client.api_url) == f'http://127.0.0.1:{apiport}/api/v0/'
 
@@ -97,13 +96,13 @@ class TestClientConstructor:
 
         # Test by passing a valid HTTPS multiaddr
         client = aioipfs.AsyncIPFS(
-            maddr=f'/dns4/localhost/tcp/{apiport}/https', loop=event_loop)
+            maddr=f'/dns4/localhost/tcp/{apiport}/https')
 
         assert str(client.api_url) == f'https://localhost:{apiport}/api/v0/'
 
         # Test by passing a valid /ip6/.../tcp/port multiaddr
         client = aioipfs.AsyncIPFS(
-            maddr=f'/ip6/::1/tcp/{apiport}', loop=event_loop)
+            maddr=f'/ip6/::1/tcp/{apiport}')
 
         assert str(client.api_url) == f'http://[::1]:{apiport}/api/v0/'
 
@@ -123,7 +122,7 @@ class TestClientConstructor:
         assert str(client.api_url) == 'http://localhost:5001/api/v0/'
 
     @pytest.mark.asyncio
-    async def test_constructor_auth(self, event_loop):
+    async def test_constructor_auth(self):
         client = aioipfs.AsyncIPFS(auth=aioipfs.BasicAuth('bob', 'pwd'))
         assert client.auth.login == 'bob'
         assert client.auth.password == 'pwd'
@@ -141,34 +140,34 @@ class TestClientConstructor:
 
 class TestAsyncIPFS:
     @pytest.mark.asyncio
-    async def test_basic(self, event_loop, ipfsdaemon, iclient):
+    async def test_basic(self, ipfsdaemon, iclient):
         await iclient.id()
         await iclient.core.version()
         await iclient.commands()
 
     @pytest.mark.asyncio
-    async def test_timeout(self, event_loop, iclient):
+    async def test_timeout(self, iclient):
         with pytest.raises(asyncio.TimeoutError):
             async with iclient.timeout(1):
                 await asyncio.sleep(3)
 
         with pytest.raises(asyncio.TimeoutError):
-            async with iclient.timeout_at(event_loop.time() + 2):
+            async with iclient.timeout_at(asyncio.get_event_loop().time() + 2):
                 await asyncio.sleep(4)
 
     @pytest.mark.asyncio
-    async def test_bootstrap(self, event_loop, ipfsdaemon, iclient):
+    async def test_bootstrap(self, ipfsdaemon, iclient):
         await iclient.bootstrap.list()
 
     @pytest.mark.asyncio
-    async def test_swarm(self, event_loop, ipfsdaemon, iclient):
+    async def test_swarm(self, ipfsdaemon, iclient):
         await iclient.swarm.peers()
         await iclient.swarm.addrs()
         await iclient.swarm.addrs_local()
         await iclient.swarm.addrs_listen()
 
     @pytest.mark.asyncio
-    async def test_swarm_resources(self, event_loop, ipfsdaemon, iclient):
+    async def test_swarm_resources(self, ipfsdaemon, iclient):
         if await iclient.agent_version_get() < \
                 aioipfs.IpfsDaemonVersion('0.20.0'):
             # /api/v0/swarm/resources was introduced in kubo v0.19.0
@@ -177,7 +176,7 @@ class TestAsyncIPFS:
         assert 'System' in await iclient.swarm.resources()
 
     @pytest.mark.asyncio
-    async def test_swarm_peering(self, event_loop, ipfsdaemon, iclient):
+    async def test_swarm_peering(self, ipfsdaemon, iclient):
         if await iclient.agent_version_get() < \
                 aioipfs.IpfsDaemonVersion('0.12.0'):
             # Unavailable for these versions
@@ -187,14 +186,14 @@ class TestAsyncIPFS:
         reply = await iclient.swarm.peering.ls()
         assert 'Peers' in reply
 
-        with pytest.raises(aioipfs.APIError):
+        with pytest.raises(APIError):
             await iclient.swarm.peering.add(info['ID'])
 
-        with pytest.raises(aioipfs.APIError):
+        with pytest.raises(APIError):
             await iclient.swarm.peering.rm('nothere')
 
     @pytest.mark.asyncio
-    async def test_refs(self, event_loop, ipfsdaemon, iclient,
+    async def test_refs(self, ipfsdaemon, iclient,
                         testfile1):
         # TODO: proper refs test from an object
         cids = [added['Hash'] async for added in iclient.add(str(testfile1))]
@@ -205,13 +204,13 @@ class TestAsyncIPFS:
             assert 'Ref' in refobj
 
     @pytest.mark.asyncio
-    async def test_block1(self, event_loop, ipfsdaemon, iclient, testfile1):
+    async def test_block1(self, ipfsdaemon, iclient, testfile1):
         reply = await iclient.block.put(testfile1)
         data = await iclient.block.get(reply['Key'])
         assert data.decode() == testfile1.read()
 
     @pytest.mark.asyncio
-    async def test_add(self, event_loop, ipfsdaemon, iclient, testfile1,
+    async def test_add(self, ipfsdaemon, iclient, testfile1,
                        testfile2):
         count = 0
         async for added in iclient.add(str(testfile1)):
@@ -251,7 +250,7 @@ class TestAsyncIPFS:
             assert (await iclient.files.read('/wslash')).decode() == 'test'
 
     @pytest.mark.asyncio
-    async def test_auth(self, event_loop, ipfsdaemon_with_auth,
+    async def test_auth(self, ipfsdaemon_with_auth,
                         ipfs_version,
                         iclient_with_auth, testfile1):
         if ipfs_version < aioipfs.IpfsDaemonVersion('0.25.0'):
@@ -284,7 +283,7 @@ class TestAsyncIPFS:
         assert await iclient_with_auth.core.id()
 
     @pytest.mark.asyncio
-    async def test_hidden(self, event_loop, ipfsdaemon, iclient,
+    async def test_hidden(self, ipfsdaemon, iclient,
                           dir_hierarchy1):
         async for added in iclient.add(dir_hierarchy1, hidden=False):
             parts = added['Name'].split('/')
@@ -299,7 +298,7 @@ class TestAsyncIPFS:
         assert 'test_hidden0/a/b/.c' in names
 
     @pytest.mark.asyncio
-    async def test_ignorerules(self, event_loop, ipfsdaemon, iclient,
+    async def test_ignorerules(self, ipfsdaemon, iclient,
                                dir_hierarchy2):
         names = []
         async for added in iclient.add(str(dir_hierarchy2),
@@ -323,7 +322,7 @@ class TestAsyncIPFS:
         assert 'test_ignorerules0/.gitignore' in names
 
     @pytest.mark.asyncio
-    async def test_addtar(self, event_loop, ipfsdaemon, iclient,
+    async def test_addtar(self, ipfsdaemon, iclient,
                           tmpdir, smalltar):
         if await iclient.agent_version_get() < \
                 aioipfs.IpfsDaemonVersion('0.26.0'):
@@ -337,7 +336,7 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.parametrize('order', ['gin', 'tonic'])
     @pytest.mark.parametrize('second', ['beer', 'wine'])
-    async def test_addjson(self, event_loop, ipfsdaemon, iclient,
+    async def test_addjson(self, ipfsdaemon, iclient,
                            order, second):
         json1 = {
             'random': 'stuff',
@@ -353,7 +352,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('data', [b'234098dsfkj2doidf0'])
-    async def test_addbytes(self, event_loop, ipfsdaemon, iclient, data):
+    async def test_addbytes(self, ipfsdaemon, iclient, data):
         reply = await iclient.add_bytes(data, cid_version=1, hash='sha2-256')
         assert reply['Hash'] == \
             'bafkreiewqrl3s3cgd4ll3wybtrxv7futfksuylocfxzlugbjparmyyt6eq'
@@ -366,7 +365,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('data', [b'234098dsfkj2doidf0'])
-    async def test_dag(self, event_loop, ipfsdaemon, iclient, tmpdir, data):
+    async def test_dag(self, ipfsdaemon, iclient, tmpdir, data):
         # More tests needed here
         entry = await iclient.add_bytes(data)
         jsondag = {'dag': {'/': entry['Hash']}}
@@ -378,7 +377,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('data', [b'234098dsfkj2doidf0'])
-    async def test_car(self, event_loop, ipfsdaemon, iclient, tmpdir, data):
+    async def test_car(self, ipfsdaemon, iclient, tmpdir, data):
         entry = await iclient.add_bytes(data)
         jsondag = {'dag': {'/': entry['Hash']}}
         filedag = tmpdir.join('jsondag.txt')
@@ -408,7 +407,7 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.skipif(sys.version_info < (3, 11),
                         reason='Need python >= 3.11 for CAR decoding')
-    async def test_car_fs_export(self, event_loop, ipfsdaemon, iclient,
+    async def test_car_fs_export(self, ipfsdaemon, iclient,
                                  tmpdir, testfile1):
         """
         Test unpacking a UnixFS CAR export to a directory
@@ -447,13 +446,13 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.skipif(platform.system() == 'Windows',
                         reason='This kubo API is not available on your OS')
-    async def test_diag(self, event_loop, ipfsdaemon, iclient, tmpdir):
+    async def test_diag(self, ipfsdaemon, iclient, tmpdir):
         reply = await iclient.diag.sys()
         assert 'diskinfo' in reply
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('data', [b'0123456789'])
-    async def test_catoffset(self, event_loop, ipfsdaemon, iclient,
+    async def test_catoffset(self, ipfsdaemon, iclient,
                              tmpdir, data):
         entry = await iclient.add_bytes(data)
         raw = await iclient.cat(entry['Hash'], offset=4)
@@ -462,7 +461,7 @@ class TestAsyncIPFS:
         assert raw.decode() == '234'
 
     @pytest.mark.asyncio
-    async def test_get(self, event_loop, ipfsdaemon,
+    async def test_get(self, ipfsdaemon,
                        iclient, testfile2, tmpdir):
         cid: str = None
 
@@ -475,7 +474,7 @@ class TestAsyncIPFS:
         assert cid in os.listdir(tmpdir)
 
     @pytest.mark.asyncio
-    async def test_multiget(self, event_loop, ipfsdaemon,
+    async def test_multiget(self, ipfsdaemon,
                             iclient, testfile2, tmpdir):
         hashes = []
 
@@ -495,7 +494,7 @@ class TestAsyncIPFS:
                 assert status in [0, 1]
 
     @pytest.mark.asyncio
-    async def test_multibase(self, event_loop, ipfsdaemon, iclient,
+    async def test_multibase(self, ipfsdaemon, iclient,
                              tmpdir, testfile1):
         if await iclient.agent_version_get() < \
                 aioipfs.IpfsDaemonVersion('0.10.0'):
@@ -527,7 +526,7 @@ class TestAsyncIPFS:
                                          b'amazing',
                                          None,
                                          1234])
-    async def test_pubsub(self, event_loop, ipfsdaemon, iclient,
+    async def test_pubsub(self, ipfsdaemon, iclient,
                           topic, msgdata):
         # Listen on a pubsub topic and send a single message, checking that
         # the multibase decoding is correctly done
@@ -587,7 +586,7 @@ class TestAsyncIPFS:
         assert t.result() is True
 
     @pytest.mark.asyncio
-    async def test_routing(self, event_loop, ipfsdaemon, iclient):
+    async def test_routing(self, ipfsdaemon, iclient):
         if await iclient.agent_version_get() < \
                 aioipfs.IpfsDaemonVersion('0.14.0'):
             with pytest.raises(aioipfs.EndpointNotFoundError):
@@ -601,7 +600,7 @@ class TestAsyncIPFS:
         assert len(provs) > 0
 
     @pytest.mark.asyncio
-    async def test_stats(self, event_loop, ipfsdaemon, iclient):
+    async def test_stats(self, ipfsdaemon, iclient):
         await iclient.stats.bw()
         await iclient.stats.bitswap()
         await iclient.stats.repo()
@@ -609,7 +608,7 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.parametrize('protocol', ['/x/test'])
     @pytest.mark.parametrize('address', ['/ip4/127.0.0.1/tcp/10000'])
-    async def test_p2p(self, event_loop, ipfsdaemon, iclient, protocol,
+    async def test_p2p(self, ipfsdaemon, iclient, protocol,
                        address):
         await iclient.p2p.listen(protocol, address)
         listeners = await iclient.p2p.listener_ls(headers=True)
@@ -632,7 +631,7 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.parametrize('protocol', ['/x/test'])
     @pytest.mark.parametrize('address', ['/ip4/127.0.0.1/tcp/10000'])
-    async def test_p2p_dial(self, event_loop, ipfsdaemon, iclient,
+    async def test_p2p_dial(self, ipfsdaemon, iclient,
                             protocol, address):
         nid = (await iclient.core.id())['ID']
         await iclient.p2p.listen(protocol, address)
@@ -643,7 +642,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('keysize', [2048, 4096])
-    async def test_keys(self, event_loop, ipfsdaemon, iclient,
+    async def test_keys(self, ipfsdaemon, iclient,
                         keysize, datafiles):
         keyname = random_word()
 
@@ -667,7 +666,7 @@ class TestAsyncIPFS:
         assert reply['Name'] == impname
 
     @pytest.mark.asyncio
-    async def test_bitswap(self, event_loop, ipfsdaemon, iclient):
+    async def test_bitswap(self, ipfsdaemon, iclient):
         await iclient.bitswap.wantlist()
         stats = await iclient.bitswap.stat()
         assert 'Wantlist' in stats
@@ -679,7 +678,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('obj', [b'0123456789'])
-    async def test_files_rw(self, event_loop, ipfsdaemon, iclient, obj,
+    async def test_files_rw(self, ipfsdaemon, iclient, obj,
                             testfile1, testfile2):
         # Write obj (bytes) to /test1
         await iclient.files.write('/test1', obj, create=True)
@@ -703,7 +702,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('obj', [b'0123456789'])
-    async def test_files_cp(self, event_loop, ipfsdaemon, iclient, obj):
+    async def test_files_cp(self, ipfsdaemon, iclient, obj):
         await iclient.files.write('/test8', obj, create=True)
         await iclient.files.cp('/test8', '/test9')
 
@@ -718,7 +717,7 @@ class TestAsyncIPFS:
     @pytest.mark.asyncio
     @pytest.mark.parametrize('obj1', [b'0123456789'])
     @pytest.mark.parametrize('obj2', [b'0a1b2c3d4e5'])
-    async def test_object(self, event_loop, ipfsdaemon, iclient, obj1, obj2,
+    async def test_object(self, ipfsdaemon, iclient, obj1, obj2,
                           testfile2):
         """ Unsure if this is correct """
 
@@ -757,7 +756,7 @@ class TestAsyncIPFS:
         assert len(dag['Links']) == 1
 
     @pytest.mark.asyncio
-    async def test_name_inspect(self, event_loop, ipfsdaemon, iclient):
+    async def test_name_inspect(self, ipfsdaemon, iclient):
         """
         Run name inspect on the node's IPNS key
         """
@@ -788,7 +787,7 @@ class TestAsyncIPFS:
             await iclient.name.inspect(42)
 
     @pytest.mark.asyncio
-    async def test_config(self, event_loop, ipfsdaemon, iclient, tmpdir):
+    async def test_config(self, ipfsdaemon, iclient, tmpdir):
         conf = await iclient.config.show()
         assert 'API' in conf
         sameconf = tmpdir.join('config.json')
@@ -815,7 +814,7 @@ class TestAsyncIPFS:
         assert result['Value'] == []
 
     @pytest.mark.asyncio
-    async def test_cidapi(self, event_loop, ipfsdaemon, iclient, testfile1):
+    async def test_cidapi(self, ipfsdaemon, iclient, testfile1):
         async for added in iclient.add(str(testfile1), cid_version=1):
             multihash = added['Hash']
             reply = await iclient.cid.base32(multihash)
@@ -830,7 +829,7 @@ class TestAsyncIPFS:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize('pin_name', ['pintest'])
-    async def test_pin(self, event_loop, ipfsdaemon, iclient, pin_name):
+    async def test_pin(self, ipfsdaemon, iclient, pin_name):
         entry = await iclient.add_bytes(b'Test', pin=False)
 
         if await iclient.agent_version_get() >= \
@@ -861,7 +860,7 @@ class TestAsyncIPFS:
     @pytest.mark.parametrize('srvname', ['mysrv1'])
     @pytest.mark.parametrize('srvendpoint',
                              ['https://api.estuary.tech/pinning'])
-    async def test_pin_remote(self, event_loop, ipfsdaemon, iclient,
+    async def test_pin_remote(self, ipfsdaemon, iclient,
                               srvname, srvendpoint):
         res = await iclient.pin.remote.service.add(
             srvname,
