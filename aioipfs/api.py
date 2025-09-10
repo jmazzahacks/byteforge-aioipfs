@@ -141,7 +141,7 @@ class BlockAPI(SubAPI):
             params['cid-codec'] = cid_codec
 
         with multi.FormDataWriter() as mpwriter:
-            block_payload = payload.BytesIOPayload(open(filepath, 'rb'))
+            block_payload = payload.BufferedReaderPayload(open(filepath, 'rb'))
             block_payload.set_content_disposition(
                 'form-data', filename=os.path.basename(filepath))
             mpwriter.append_payload(block_payload)
@@ -1396,7 +1396,7 @@ class CoreAPI(SubAPI):
                     basename = os.path.basename(filepath)
                     _fd = open(filepath, 'rb')
 
-                    file_payload = payload.BytesIOPayload(
+                    file_payload = payload.BufferedReaderPayload(
                         _fd,
                         content_type='application/octet-stream',
                         headers={
