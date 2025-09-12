@@ -42,11 +42,14 @@ black aioipfs tests
 # Activate virtual environment
 source bin/activate
 
-# Install package in development mode with all extras
-pip install -e ".[orjson,car,bohort,dev]"
+# Install core dependencies
+pip install -r requirements.txt
 
-# Install development requirements
-pip install -r dev-requirements.txt
+# For development (includes core + dev dependencies)
+pip install -r requirements-dev.txt
+
+# Alternative: Install package in development mode with all extras
+pip install -e ".[orjson,car,bohort,dev]"
 ```
 
 ## Architecture
