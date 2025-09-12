@@ -1,7 +1,7 @@
 __version__ = '0.7.1'
 
 from yarl import URL
-from distutils.version import StrictVersion  # type: ignore
+from packaging.version import Version
 from typing import Union
 
 import async_timeout
@@ -31,7 +31,7 @@ from aioipfs.helpers import unusedTcpPort
 RPC_API_DEFAULT_PORT = 5001
 
 
-class IpfsDaemonVersion(StrictVersion):
+class IpfsDaemonVersion(Version):
     pass
 
 

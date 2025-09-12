@@ -10,7 +10,7 @@ import os.path
 import json
 import tarfile
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 from pathlib import Path
 
 import aioipfs
@@ -49,7 +49,7 @@ def ipfs_version():
     p = subprocess.Popen(['ipfs', 'version'],
                          stdout=subprocess.PIPE)
     stdout, _ = p.communicate()
-    return StrictVersion(stdout.decode().replace('ipfs version ', ''))
+    return Version(stdout.decode().replace('ipfs version ', ''))
 
 
 @pytest.fixture

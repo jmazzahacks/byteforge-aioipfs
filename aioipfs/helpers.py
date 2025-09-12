@@ -3,7 +3,7 @@ import json
 import re
 
 from multiaddr import Multiaddr  # type: ignore
-from distutils.version import StrictVersion  # type: ignore
+from packaging.version import Version
 from contextlib import closing
 from typing import Union
 import socket
@@ -152,7 +152,7 @@ def p2p_addr_explode(addr: str) -> tuple:
             proto_a.append(proto_part)
 
             try:
-                v = StrictVersion(proto_part)
+                v = Version(proto_part)
             except Exception:
                 # No version
                 pass
