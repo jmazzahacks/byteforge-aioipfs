@@ -1,9 +1,33 @@
-# aioipfs
+# byteforge-aioipfs
 
 [![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 An asynchronous Python client library for IPFS (InterPlanetary File System) using the RPC API. Compatible with [kubo](https://github.com/ipfs/kubo) (go-ipfs) versions 0.11.0 through 0.32.0.
+
+## Why This Fork?
+
+This project is a fork of the original [aioipfs](https://gitlab.com/cipres/aioipfs) library, which hadn't been updated since early 2024 and had several issues that needed addressing. I created this enhanced version to provide:
+
+### 🔧 **Fixed Critical Issues**
+- **Resolved test failures** - The original project had broken unit tests due to deprecated Python features and incompatible library usage
+- **Fixed aiohttp compatibility** - Corrected improper use of `BytesIOPayload` that caused crashes with file operations
+- **Eliminated deprecation warnings** - Updated from deprecated `distutils` to modern `packaging.version` library
+- **Modernized dependency chain** - Upgraded Google Cloud and protobuf dependencies to eliminate datetime warnings
+
+### 🚀 **Enhanced Development Experience**
+- **Working test suite** - All 50+ unit tests now pass reliably
+- **Clean requirements files** - Added `requirements.txt` and `requirements-dev.txt` for better dependency management
+- **Updated documentation** - Comprehensive README and development instructions
+- **Modern Python practices** - Code follows current Python standards and best practices
+
+### 🛠 **Improved Maintenance**
+- **Dependency updates** - Upgraded outdated packages to their latest compatible versions
+- **Better error handling** - Fixed undefined variable references and missing imports
+- **Debug capabilities** - Added debugging tools for troubleshooting IPFS operations
+- **Future-proof** - Updated to work with the latest Python versions and IPFS releases
+
+All changes maintain full backward compatibility while significantly improving reliability and developer experience.
 
 ## Features
 
