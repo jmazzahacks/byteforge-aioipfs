@@ -7,3 +7,5 @@ tox
 wheel
 black
 tux
+build
+twine
