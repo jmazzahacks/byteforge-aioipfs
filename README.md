@@ -44,6 +44,24 @@ All changes maintain full backward compatibility while significantly improving r
 
 ## Installation
 
+### Install from PyPI (Recommended)
+```bash
+# Basic installation
+pip install byteforge-aioipfs
+
+# With optional performance enhancements (orjson for faster JSON)
+pip install byteforge-aioipfs[orjson]
+
+# With CAR file support
+pip install byteforge-aioipfs[car]
+
+# With Bohort REPL tool
+pip install byteforge-aioipfs[bohort]
+
+# With all optional features
+pip install byteforge-aioipfs[orjson,car,bohort]
+```
+
 ### Installation from Source
 ```bash
 git clone https://github.com/jmazzahacks/byteforge-aioipfs.git
